@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "C/C++ Runner: Debug Session",
+      "type": "lldb",
+      "request": "launch",
+      "args": [],
+      "cwd": "/Users/magdyroshdy/Desktop/untitled_folder/C++/DSA GitHub/XMLVisualizer",
+      "program": "/Users/magdyroshdy/Desktop/untitled_folder/C++/DSA GitHub/XMLVisualizer/build/Debug/outDebug"
+    }
+  ]
+}
