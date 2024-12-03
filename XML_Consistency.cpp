@@ -3,6 +3,8 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <string>
+
 
 using namespace std;
 
@@ -369,19 +371,36 @@ int main()
     cout << "Checking XML file consistency..."<<"XML consistency: "<<(isConsistent ? "Consistent" : "Inconsistent") << endl;
 
 
-    cout << "Detect XML file errors..." << endl;
-    vector<int> error_index = findMismatchedTags (xml);
-
-
-    for(int i = 0 ; i<error_index.size() ; i++)
+    
+    if (!isConsistent)
     {
-        cout<<"error index = "<<error_index[i]<<" first 11 chars of it: ";
-        cout<<xml[error_index[i]]<<xml[error_index[i]+1]<<xml[error_index[i]+2]<<xml[error_index[i]+3]<<xml[error_index[i]+4]<<xml[error_index[i]+5]<<xml[error_index[i]+6]<<xml[error_index[i]+7]<<xml[error_index[i]+8]<<xml[error_index[i]+9]<<xml[error_index[i]+10]<<xml[error_index[i]+11]<<endl;
-    }
+        cout << "Detect XML file errors..." << endl;
+        vector<int> error_index = findMismatchedTags (xml);
 
-    cout << "Correct XML file errors..." << endl;
-    string xml_corrected = correctMismatchedTags(xml);              //it doesn't handle errors of ( <  >  / ) 
-    cout<<xml_corrected<<endl;
+        for(int i = 0 ; i<error_index.size() ; i++)
+        {
+            cout<<"error index = "<<error_index[i]<<" first 11 chars of it: ";
+            cout<<xml[error_index[i]]<<xml[error_index[i]+1]<<xml[error_index[i]+2]<<xml[error_index[i]+3]<<xml[error_index[i]+4]<<xml[error_index[i]+5]<<xml[error_index[i]+6]<<xml[error_index[i]+7]<<xml[error_index[i]+8]<<xml[error_index[i]+9]<<xml[error_index[i]+10]<<xml[error_index[i]+11]<<endl;
+        }
+        cout << "Correct XML file errors..." << endl;
+        xml = correctMismatchedTags(xml);              //it doesn't handle errors of ( <  >  / ) 
+        ofstream outFile("newSample.txt");
+        if (outFile.is_open()) 
+        {
+            outFile << xml <<endl;
+            
+            outFile.close();
+
+            cout << "xml written to newfile.txt successfully!" <<endl;
+        } 
+        else 
+        {
+            std::cerr << "Failed to open file for writing!" <<endl;
+        }
+    }
+    
+
+    
 
     
 
