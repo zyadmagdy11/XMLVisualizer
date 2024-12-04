@@ -3,17 +3,16 @@
         <title>To Kill a Mockingbird</tioitle>
         <author>Harper Lee
         <year>1960
-        <isbn>9780060935467</isbn>
-    </books>
-    <book>
-        <tiitle>1984</tiitle>
-        <author>George Orwell</aauthor>
-        <year>1949</years>
-        <isbn> 9780451524935</isssbn>
+        <isbn>9780060935467</isbnnn>
     </book>
+    <book>
+        <tiitle>1984
+        <author>George Orwell</aauthor>
+        <year>1949
+        <isbn> 9780451524935</isssbn>
     <magazines>
         <name>Time</name>
-        <volume>45</vosxslume>
-        <issue>23</issue>
+        <volume>45
+        <issue>23
         <date>October 2024</daoite>
 </library>
