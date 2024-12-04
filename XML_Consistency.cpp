@@ -4,6 +4,7 @@
 #include <sstream>
 #include <vector>
 #include <string>
+#include <algorithm>
 
 
 using namespace std;
@@ -242,76 +243,111 @@ int correctindex(string xml,int i)
 
 string correctMismatchedTags(string xml) 
 {
-    vector<int>     mismatchedPositions = findMismatchedTags(xml);
+    vector<int>     tag_index = findMismatchedTags(xml);
     vector<string>  tagContent;
-    vector<int>     tag_index;
     int offset = 0; // To keep track of changes in the string length
-    
+    int closePos;
+    string closingTag;
+    string r;
+    int pos = 0;
 
+    for(int p: tag_index)
+    {
+        closePos = xml.find('>', p);
+        tagContent.push_back(xml.substr(p + 1, closePos - p - 1));
+    }
 
-    for (int pos : mismatchedPositions) 
+    //Error_Case 1: (no direct close tag).example : <author>Harper Lee
+    for(int i = 0 ; i<tagContent.size() ; i++)
+    {
+        pos = tag_index[i] + offset;
+        closingTag = "</" + tagContent[i] + ">";
+        closePos = xml.find('>', pos) + 1;
+        r = tagContent[i+1];
+
+        if (xml[closePos] != '<' && r[0] != '/' )
+        {
+            closePos = xml.find('<', closePos);
+            xml.insert(closePos, closingTag);
+            offset += closingTag.length();
+
+            tagContent.erase(tagContent.begin() + i);
+            tag_index.erase(tag_index.begin() + i);
+            i--;
+        }
+        else        tag_index[i] = tag_index[i] + offset;
+    }
+
+    offset = 0;
+    int i = 0;
+    vector<int>     temp_tag_index;
+    vector<string>  temp_tagContent;
+
+    //Error_Case 2: (wrong close tag).example : <author>Harper Lee<aaauthor>
+    for (int pos : tag_index) 
     {
         pos += offset; // Adjust position based on previous modifications
 
         if (xml[pos + 1] == '/') 
         {
             // It's a closing tag, remove it
-            int closePos = xml.find('>', pos);
+            closePos = xml.find('>', pos);
             xml.erase(pos, closePos - pos + 1);
             offset -= (closePos - pos + 1);
 
             // Insert the correct closing tag
-            string closingTag = "</" + tagContent.back() + ">";
+            closingTag = "</" + temp_tagContent.back() + ">";
             xml.insert(pos, closingTag);
             offset += closingTag.length();
-            tagContent.pop_back();
-            tag_index.pop_back();
+
+            if (!temp_tagContent.empty()) temp_tagContent.pop_back();
+            if (!temp_tag_index.empty()) temp_tag_index.pop_back();
+        
         } 
         else 
         {
-            int closePos = xml.find('>', pos);
-            tagContent.push_back(xml.substr(pos + 1, closePos - pos - 1));
-            tag_index.push_back(pos);
+            temp_tagContent.push_back(tagContent[i]);
+            temp_tag_index.push_back(pos);
         }
-       
+        i++;
     }
-    string closingTag;
-    int closePos; 
-    bool f = false;
-    int len = 0;
-    while (!tagContent.empty() && !tag_index.empty()) 
+
+    //Error_Case 3:(nested tag without closetag).example :
+    //<library>
+    //   <start>
+    //      <author>Harper Lee<author>
+    //      <isbn>9780060935467</isbn>
+    //                   <---
+    //  <book>
+    //        <tiitle>1984<tiitle>
+    //        <author>George Orwell<author>
+    //        <year>1949<year>
+    //                   <---
+    //</library>
+
+
+    offset = 0;
+    for(i = 0 ; i<temp_tagContent.size() ; i++)
     {
-        
-        int i;
-        for(i = 0 ; i<tagContent.size() ; i++)
-        {
-            if(f) break;
-            closingTag = "</" + tagContent[i] + ">";
-            closePos = xml.find('>', tag_index[i]+len) + 1;
+        pos = temp_tag_index[i] + offset;
+        closingTag = "</" + temp_tagContent[i] + ">";
+        closePos = xml.find('>', pos) + 1;
 
-            if (xml[closePos] != '<')
-            {
-                closePos = xml.find('<', closePos);
-                xml.insert(closePos, closingTag);
-                len += closingTag.length();
 
-                tagContent.erase(tagContent.begin() + i);
-                tag_index.erase(tag_index.begin() + i);
-                i--;
-            }
-            
-        }
-        f = true;
-        closingTag = "</" + tagContent.back() + ">";
-        closePos = xml.find('>', tag_index.back()+len) + 1;
         closePos = correctindex(xml,closePos);
         xml.insert(closePos, closingTag);
-        len += closingTag.length();
+        offset += closingTag.length();
         
-        tagContent.pop_back();
-        tag_index.pop_back();
+        temp_tagContent.erase(temp_tagContent.begin() + i);
+        temp_tag_index.erase(temp_tag_index.begin() + i);
+        i--; 
+        
     }
+
+    if (!temp_tagContent.empty() && !temp_tag_index.empty()) cout<<"The remain Errors is not handled";
     return xml;
+
+    
 }
 
 
