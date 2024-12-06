@@ -283,6 +283,7 @@ string correctMismatchedTags(string xml)
     vector<int>     temp_tag_index;
     vector<string>  temp_tagContent;
 
+
     //Error_Case 2: (wrong close tag).example : <author>Harper Lee</aaauthor>
     for (int pos : tag_index) 
     {
@@ -315,13 +316,13 @@ string correctMismatchedTags(string xml)
     //Error_Case 3:(nested tag without closetag).example :
     //<library>
     //   <start>
-    //      <author>Harper Lee</author>
+    //      <author>Harper Lee<author>
     //      <isbn>9780060935467</isbn>
     //                   <---
     //  <book>
-    //        <tiitle>1984</tiitle>
-    //        <author>George Orwell</author>
-    //        <year>1949</year>
+    //        <tiitle>1984<tiitle>
+    //        <author>George Orwell<author>
+    //        <year>1949<year>
     //                   <---
     //</library>
 
@@ -347,7 +348,6 @@ string correctMismatchedTags(string xml)
     if (!temp_tagContent.empty() && !temp_tag_index.empty()) cout<<"The remain Errors is not handled";
     return xml;
 
-    
 }
 
 
