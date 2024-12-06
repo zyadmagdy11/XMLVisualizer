@@ -283,7 +283,8 @@ string correctMismatchedTags(string xml)
     vector<int>     temp_tag_index;
     vector<string>  temp_tagContent;
 
-    //Error_Case 2: (wrong close tag).example : <author>Harper Lee<aaauthor>
+
+    //Error_Case 2: (wrong close tag).example : <author>Harper Lee</aaauthor>
     for (int pos : tag_index) 
     {
         pos += offset; // Adjust position based on previous modifications
@@ -346,7 +347,6 @@ string correctMismatchedTags(string xml)
 
     if (!temp_tagContent.empty() && !temp_tag_index.empty()) cout<<"The remain Errors is not handled";
     return xml;
-
 
 }
 
