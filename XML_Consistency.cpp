@@ -323,7 +323,7 @@ string correctMismatchedTags(string xml)
     //        <author>George Orwell<author>
     //        <year>1949<year>
     //                   <---
-    //<library>
+    //</library>
 
 
     offset = 0;
@@ -347,7 +347,7 @@ string correctMismatchedTags(string xml)
     if (!temp_tagContent.empty() && !temp_tag_index.empty()) cout<<"The remain Errors is not handled";
     return xml;
 
-    
+
 }
 
 

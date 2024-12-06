@@ -1,1 +1,1 @@
-sort(mismatchedPositions.begin(), mismatchedPositions.end());
+cout<<"\b\b";

@@ -1,0 +1,116 @@
+<network>
+    <user>
+        <id>2100888</id>
+        <name>John</name>
+        <posts>
+            <post>Post 1 by John</post>
+            <post>Post 2 by John</post>
+            <post>Post 3 by John</post>
+        </posts>
+        <followers>
+            <follower>
+                <id>2100444</id>
+            </follower>
+            <follower>
+                <id>2100555</id>
+            </follower>
+            <follower>
+                <id>2100111</id>
+            </follower>
+        </followers>
+    </user>
+    <user>
+        <id>2100444</id>
+        <name>Alice</name>
+        <posts>
+            <post>Post 1 by Alice</post>
+            <post>Post 2 by Alice</post>
+        </posts>
+        <followers>
+            <follower>
+                <id>2100999</id>
+            </follower>
+            <follower>
+                <id>2100111</id>
+            </follower>
+        </followers>
+    </user>
+    <user>
+        <id>2100777</id>
+        <name>Bob</name>
+        <posts>
+            <post>Post 1 by Bob</post>
+            <post>Post 2 by Bob</post>
+        </posts>
+        <followers>
+            <follower>
+                <id>2100999</id>
+            </follower>
+            <follower>
+                <id>2100444</id>
+            </follower>
+        </followers>
+    </user>
+    <user>
+        <id>2100999</id>
+        <name>Charlie</name>
+        <posts>
+            <post>Post 1 by Charlie</post>
+            <post>Post 2 by Charlie</post>
+        </posts>
+        <followers>
+            <follower>
+                <id>2100555</id>
+            </follower>
+            <follower>
+                <id>2100777</id>
+            </follower>
+        </followers>
+    </user>
+    <user>
+        <id>2100555</id>
+        <name>David</name>
+        <posts>
+            <post>Post 1 by David</post>
+        </posts>
+        <followers>
+            <follower>
+                <id>2100333</id>
+            </follower>
+            <follower>
+                <id>2100444</id>
+            </follower>
+        </followers>
+    </user>
+    <user>
+        <id>2100111</id>
+        <name>Eva</name>
+        <posts>
+            <post>Post 1 by Eva</post>
+        </posts>
+        <followers>
+            <follower>
+                <id>2100555</id>
+            </follower>
+        </followers>
+    </user>
+    <user>
+        <id>2100333</id>
+        <name>Frank</name>
+        <posts>
+            <post>Post 1 by Frank</post>
+            <post>Post 2 by Frank</post>
+        </posts>
+        <followers>
+            <follower>
+                <id>2100888</id>
+            </follower>
+            <follower>
+                <id>2100999</id>
+            </follower>
+            <follower>
+                <id>21</id>
+            </follower>
+        </followers>
+    </user>
+</network>
