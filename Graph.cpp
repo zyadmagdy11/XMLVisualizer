@@ -11,7 +11,7 @@ struct User {
     vector<string> posts;
     vector<string> Followers_id;
 };
-
+// Weighted, Directed Graph
 class Graph {
 private:
     int numVer;
@@ -70,6 +70,10 @@ public:
         {
             cout << "Invalid user IDs for edge." << endl;
         }
+    }
+    void clearMarks() 
+    {
+        for (int i = 0; i < numVer; i++)  marks[i] = false; 
     }
 
     int indexOf(User vertex) 
@@ -171,19 +175,19 @@ public:
             User currentUser = vertices[i];
             for (string followerId : currentUser.Followers_id) 
             {
-                User random = {followerId, "Unknown User",vector<string>(), vector<string>()};
+                User random = {followerId, "---",vector<string>(), vector<string>()};
                 int followerIndex = indexOf(random); 
                 if (followerIndex != -1) 
                 {
                     User newFollower = vertices[followerIndex];
-                    AddEdge(currentUser, newFollower, 1);  
+                    AddEdge(newFollower, currentUser, 1);  
                 } 
                 else 
                 {
                     // Create Unknown User if follower is not found
                     User newFollower = {followerId, "Unknown User", vector<string>(), vector<string>()};
                     AddVertex(newFollower);  
-                    AddEdge(currentUser, newFollower, 1);
+                    AddEdge(newFollower, currentUser, 1);
                 }
             }
         }
@@ -204,7 +208,7 @@ public:
             cout << "\nFollowers: ";
             for (int j = 0; j < numVer; j++) 
             {
-                if (edges[i][j] != 0) 
+                if (edges[j][i] != 0) 
                 {
                     cout << vertices[j].name<< ", ";
                 }
