@@ -84,6 +84,14 @@ public:
         }
         return -1;
     }
+    int indexOf(string id) 
+    {
+        for (int i = 0; i < numVer; i++) 
+        {
+            if (vertices[i].id == id) return i;  // Compare by ID
+        }
+        return -1;
+    }
 
     void parseXML(string filename) 
     {
@@ -175,8 +183,7 @@ public:
             User currentUser = vertices[i];
             for (string followerId : currentUser.Followers_id) 
             {
-                User random = {followerId, "---",vector<string>(), vector<string>()};
-                int followerIndex = indexOf(random); 
+                int followerIndex = indexOf(followerId); 
                 if (followerIndex != -1) 
                 {
                     User newFollower = vertices[followerIndex];
