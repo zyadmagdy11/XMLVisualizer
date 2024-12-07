@@ -77,8 +77,8 @@ HuffmanNode* buildHuffmanTree(const std::vector<CharFrequency>& frequencies) {
 
 
     while (huff.size() > 1) {
-        HuffmanNode* left = huff.top(); minHeap.pop();
-        HuffmanNode* right = huff.top(); minHeap.pop();
+        HuffmanNode* left = huff.top(); huff.pop();
+        HuffmanNode* right = huff.top(); huff.pop();
         
         //Create a new node with placeholder character '\0' and it will hold the 
         // combined frequency of its two child nodes
