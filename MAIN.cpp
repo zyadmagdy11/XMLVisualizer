@@ -437,9 +437,9 @@ private:
 string FormattingFunction(const string &input)
 {
     string output;
-    stack<string> tagStack; // Stack to track tags for indentation
-    string currentTag;      // Temporary storage for current tag
-    bool insideTag = false; // To check if parsing inside a tag
+    stack<string> tagStack;
+    string currentTag;
+    bool insideTag = false;
     int indentationLevel = 0;
 
     for (size_t i = 0; i < input.size(); ++i)
@@ -456,7 +456,7 @@ string FormattingFunction(const string &input)
                 {
                     output += '\n';
                 }
-                output += string(indentationLevel * 2, ' ') + currentTag + '\n';
+                output += string(indentationLevel * 2, '\t') + currentTag + '\n';
                 currentTag.clear();
             }
             insideTag = true;
@@ -474,9 +474,9 @@ string FormattingFunction(const string &input)
                 if (!tagStack.empty())
                 {
                     tagStack.pop();
-                    indentationLevel--; // Reduce indentation level
+                    indentationLevel--;
                 }
-                output += string(indentationLevel * 2, ' ') + currentTag + '\n';
+                output += string(indentationLevel * 2, '    ') + currentTag + '\n';
             }
             else
             {
