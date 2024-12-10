@@ -224,6 +224,32 @@ public:
         }
     }
 };
+User most_active() 
+{
+    int maxActivity = -1; 
+    User mostActiveUser;
+
+    for (int i = 0; i < numVer; i++) 
+    {
+        int activityScore = 0;
+
+        for (int j = 0; j < numVer; j++) 
+        {
+            if (edges[i][j] != 0) 
+            {
+                activityScore++;  
+            }
+        }
+
+        if (activityScore > maxActivity) 
+        {
+            maxActivity = activityScore;
+            mostActiveUser = vertices[i];  
+        }
+    }
+
+    return mostActiveUser; 
+}
 
 int main() 
 {
