@@ -111,11 +111,11 @@ bool checkXMLConsistency(string xml)
         {
             int closePos = xml.find('>', i);
 
-            string tagContent = xml.substr(i + 1, closePos - i - 1); // Extract tag content between '<' and '>'
+            string tagContent = xml.substr(i + 1, closePos - i - 1);
 
             if (tagContent[0] == '/')
             {
-                string tagName = tagContent.substr(1); // Remove '/' from the tag
+                string tagName = tagContent.substr(1);
 
                 if (tagStack.isEmpty() || tagStack.peek() != tagName)
                 {
@@ -141,12 +141,11 @@ bool checkXMLConsistency(string xml)
 
 vector<int> findMismatchedTags(string xml)
 {
-    vector<string> tagStack;         // Vector to store open tags
-    vector<int> positionStack;       // Vector to store open tags positions
-    vector<int> mismatchedPositions; // Vector to store mismatched tags positions
+    vector<string> tagStack;
+    vector<int> positionStack;
+    vector<int> mismatchedPositions;
 
-    int i = 0;
-    int n = xml.length();
+    int i = 0, n = xml.length();
 
     while (i < n)
     {
@@ -156,8 +155,6 @@ vector<int> findMismatchedTags(string xml)
             string tagContent = xml.substr(i + 1, closePos - i - 1);
             bool isClosingTag = (tagContent[0] == '/');
             string tagName = isClosingTag ? tagContent.substr(1) : tagContent;
-
-            int tagPosition = i;
 
             if (isClosingTag)
             {
@@ -174,13 +171,13 @@ vector<int> findMismatchedTags(string xml)
                 }
                 if (!matched)
                 {
-                    mismatchedPositions.push_back(tagPosition);
+                    mismatchedPositions.push_back(i);
                 }
             }
             else
             {
                 tagStack.push_back(tagName);
-                positionStack.push_back(tagPosition);
+                positionStack.push_back(i);
             }
 
             i = closePos + 1;
@@ -196,140 +193,46 @@ vector<int> findMismatchedTags(string xml)
     return mismatchedPositions;
 }
 
-int correctindex(string xml, int i)
+string correctMismatchedTags(string xml, vector<int> tag_index)
 {
-    vector<string> tagStack;
-    int n = xml.length();
-    bool flag = false;
-
-    while (i < n)
-    {
-        if (xml[i] == '<')
-        {
-            int closePos = xml.find('>', i);
-
-            string tagContent = xml.substr(i + 1, closePos - i - 1);
-            bool isClosingTag = (tagContent[0] == '/');
-            string tagName = isClosingTag ? tagContent.substr(1) : tagContent;
-
-            if (isClosingTag)
-            {
-                if (tagStack.empty() || tagStack.back() != tagName)
-                {
-                    return i; // Found a closing tag without its corresponding opening tag
-                }
-                tagStack.pop_back();
-                flag = false;
-            }
-            else
-            {
-                if (flag)
-                {
-                    return i - tagStack.back().length() - 2; // Found two consecutive opening tags
-                }
-                tagStack.push_back(tagName);
-                flag = true;
-            }
-
-            i = closePos + 1;
-        }
-        else
-            i++;
-    }
-    return -1; // No mismatched closing tag found
-}
-
-string correctMismatchedTags(string xml)
-{
-    vector<int> tag_index = findMismatchedTags(xml);
     vector<string> tagContent;
-    int offset = 0; // To keep track of changes in the string length
-    int closePos;
+
     string closingTag;
-    string r;
+    int closePos;
     int pos = 0;
+    int offset = 0;
 
     for (int p : tag_index)
     {
         closePos = xml.find('>', p);
-        tagContent.push_back(xml.substr(p + 1, closePos - p - 1));
+        if (xml[p + 1] != '/')
+        {
+            tagContent.push_back(xml.substr(p + 1, closePos - p - 1));
+        }
+        else
+        {
+            tagContent.push_back(xml.substr(p + 2, closePos - p - 2));
+        }
     }
 
-    // Error_Case 1: (no direct close tag).example : <author>Harper Lee
     for (int i = 0; i < tagContent.size(); i++)
     {
         pos = tag_index[i] + offset;
-        closingTag = "</" + tagContent[i] + ">";
-        closePos = xml.find('>', pos) + 1;
-        r = tagContent[i + 1];
-
-        if (xml[closePos] != '<' && r[0] != '/')
+        if (xml[pos + 1] != '/') // opentag without closetag
         {
-            closePos = xml.find('<', closePos);
+            closingTag = "</" + tagContent[i] + ">";
+            closePos = xml.find('>', pos) + 1;
             xml.insert(closePos, closingTag);
             offset += closingTag.length();
-
-            tagContent.erase(tagContent.begin() + i);
-            tag_index.erase(tag_index.begin() + i);
-            i--;
         }
-        else
-            tag_index[i] = tag_index[i] + offset;
-    }
-
-    offset = 0;
-    int i = 0;
-    vector<int> temp_tag_index;
-    vector<string> temp_tagContent;
-
-    // Error_Case 2: (wrong close tag).example : <author>Harper Lee</aaauthor>
-    for (int pos : tag_index)
-    {
-        pos += offset; // Adjust position based on previous modifications
-
-        if (xml[pos + 1] == '/')
+        else // closetag without opentag
         {
-            // It's a closing tag, remove it
-            closePos = xml.find('>', pos);
-            xml.erase(pos, closePos - pos + 1);
-            offset -= (closePos - pos + 1);
-
-            // Insert the correct closing tag
-            closingTag = "</" + temp_tagContent.back() + ">";
-            xml.insert(pos, closingTag);
+            closingTag = "<" + tagContent[i] + ">";
+            closePos = pos;
+            xml.insert(closePos, closingTag);
             offset += closingTag.length();
-
-            if (!temp_tagContent.empty())
-                temp_tagContent.pop_back();
-            if (!temp_tag_index.empty())
-                temp_tag_index.pop_back();
         }
-        else
-        {
-            temp_tagContent.push_back(tagContent[i]);
-            temp_tag_index.push_back(pos);
-        }
-        i++;
     }
-
-    offset = 0;
-    for (i = 0; i < temp_tagContent.size(); i++)
-    {
-        pos = temp_tag_index[i] + offset;
-        closingTag = "</" + temp_tagContent[i] + ">";
-        closePos = xml.find('>', pos) + 1;
-
-        closePos = correctindex(xml, closePos);
-        xml.insert(closePos, closingTag);
-        offset += closingTag.length();
-
-        temp_tagContent.erase(temp_tagContent.begin() + i);
-        temp_tag_index.erase(temp_tag_index.begin() + i);
-        i--;
-    }
-
-    if (!temp_tagContent.empty() && !temp_tag_index.empty())
-        cout << "The remain Errors is not handled";
     return xml;
 }
 
@@ -877,7 +780,7 @@ int main()
                 }
 
                 cout << "Correcting XML file errors...\n";
-                xml = correctMismatchedTags(xml);
+                xml = correctMismatchedTags(xml, mismatches);
 
                 ofstream outFile("MAIN_output.xml");
                 if (outFile.is_open())
