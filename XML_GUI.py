@@ -139,7 +139,6 @@ class XMLViewerApp:
         )
         self.title_label.pack(pady=10)
 
-        # Buttons
         self.buttons_frame = tk.Frame(self.root, bg="#f5f5f5")
         self.buttons_frame.pack(pady=10)
 
@@ -208,7 +207,7 @@ class XMLViewerApp:
 
     def display_xml_in_treeview(self, xml_content):
         """Display the XML content in a Treeview widget."""
-        self.treeview.delete(*self.treeview.get_children())  # Clear existing entries
+        self.treeview.delete(*self.treeview.get_children())  
         
         def parse_xml_to_tree(xml, parent_id=""):
             i = 0
@@ -217,13 +216,12 @@ class XMLViewerApp:
                     is_closing = xml[i + 1] == '/'
                     tag_start = i + (2 if is_closing else 1)
                     tag_end = xml.find('>', tag_start)
-                    if tag_end == -1:  # Malformed tag
+                    if tag_end == -1:  
                         break
                     tag_content = xml[tag_start:tag_end]
-                    if is_closing:  # Closing tag
-                        return tag_end + 1  # Return after closing tag
-                    else:  # Opening tag
-                        # Extract tag name and attributes
+                    if is_closing:  
+                        return tag_end + 1  
+                    else:  
                         space_idx = tag_content.find(' ')
                         if space_idx != -1:
                             tag_name = tag_content[:space_idx]
@@ -232,14 +230,11 @@ class XMLViewerApp:
                             tag_name = tag_content
                             attributes = ""
 
-                        # Insert into Treeview
                         node_id = self.treeview.insert(
                             parent_id, 'end', text=tag_name, values=(attributes or ""))
-                        
-                        # Recursively process child nodes
                         i = parse_xml_to_tree(xml[tag_end + 1:], parent_id=node_id)
                         continue
-                i += 1  # Skip other characters
+                i += 1 
             return len(xml)
 
         # Parse the root node
@@ -311,25 +306,7 @@ class XMLViewerApp:
         except Exception as e:
             messagebox.showerror("Error", f"An error occurred: {e}")
 
-    def _find_mismatched_tags(self, xml_content):
-        # Detect mismatched tags
-        stack = []
-        mismatches = []
-        for i in range(len(xml_content)):
-            if xml_content[i] == '<':
-                closing = xml_content[i + 1] == '/'
-                tag_start = i + (2 if closing else 1)
-                tag_end = xml_content.find('>', tag_start)
-                tag = xml_content[tag_start:tag_end]
-                if closing:
-                    if not stack or stack[-1] != tag:
-                        mismatches.append(i)
-                    else:
-                        stack.pop()
-                else:
-                    stack.append(tag)
-        return mismatches
-
+#############################################################################################
     def correct_xml(self):
         if not self.file_path:
             messagebox.showwarning("Warning", "Please load an XML file first.")
@@ -351,32 +328,69 @@ class XMLViewerApp:
 
     def _correct_mismatched_tags(self, xml_content):
         mismatched_positions = self._find_mismatched_tags(xml_content)
-        tag_stack = []  # To track opening tags
-        offset = 0      # To adjust for string modifications
+        tag_content = []  # Stores the names of unmatched tags
+        offset = 0        # Tracks changes in string length due to insertions
 
+        # Extract tag names for each mismatched position
         for pos in mismatched_positions:
-            pos += offset
-            if xml_content[pos + 1] == '/':  # Closing tag
-                close_pos = xml_content.find('>', pos)
-                xml_content = xml_content[:pos] + xml_content[close_pos + 1:]
-                offset -= (close_pos - pos + 1)
-            else:  # Opening tag
-                close_pos = xml_content.find('>', pos)
-                tag_name = xml_content[pos + 1:close_pos]
-                closing_tag = f"</{tag_name}>"
-                insert_pos = xml_content.find('<', close_pos + 1)
-                if insert_pos == -1:  # No subsequent tags, append at the end
-                    insert_pos = len(xml_content)
-                xml_content = xml_content[:insert_pos] + closing_tag + xml_content[insert_pos:]
-                offset += len(closing_tag)
+            close_pos = xml_content.find('>', pos)
+            if xml_content[pos + 1] != '/':  # Opening tag
+                tag_content.append(xml_content[pos + 1:close_pos])
+            else:  # Closing tag
+                tag_content.append(xml_content[pos + 2:close_pos])
 
-        # Handle remaining unmatched opening tags
-        while tag_stack:
-            tag_name = tag_stack.pop()
-            closing_tag = f"</{tag_name}>"
-            xml_content += closing_tag
+        # Correct mismatched tags
+        for i, pos in enumerate(mismatched_positions):
+            pos += offset
+            if xml_content[pos + 1] != '/':  # Opening tag without a matching closing tag
+                closing_tag = f"</{tag_content[i]}>"
+                close_pos = xml_content.find('>', pos) + 1
+                xml_content = xml_content[:close_pos] + closing_tag + xml_content[close_pos:]
+                offset += len(closing_tag)
+            else:  # Closing tag without a matching opening tag
+                opening_tag = f"<{tag_content[i]}>"
+                xml_content = xml_content[:pos] + opening_tag + xml_content[pos:]
+                offset += len(opening_tag)
 
         return xml_content
+
+    def _find_mismatched_tags(self, xml_content):
+        # Detect mismatched tags
+        tag_stack = []
+        position_stack = []
+        mismatched_positions = []
+
+        i = 0
+        while i < len(xml_content):
+            if xml_content[i] == '<':
+                closing = xml_content[i + 1] == '/'
+                tag_start = i + (2 if closing else 1)
+                tag_end = xml_content.find('>', tag_start)
+                if tag_end == -1:
+                    break
+
+                tag = xml_content[tag_start:tag_end]
+                if closing:
+                    matched = False
+                    for j in range(len(tag_stack) - 1, -1, -1):
+                        if tag_stack[j] == tag:
+                            tag_stack.pop(j)
+                            position_stack.pop(j)
+                            matched = True
+                            break
+                    if not matched:
+                        mismatched_positions.append(i)
+                else:
+                    tag_stack.append(tag)
+                    position_stack.append(i)
+
+                i = tag_end + 1
+            else:
+                i += 1
+
+        mismatched_positions.extend(position_stack)
+        mismatched_positions.sort()
+        return mismatched_positions
 
 #############################################################################################
     def convert_to_json(self):
