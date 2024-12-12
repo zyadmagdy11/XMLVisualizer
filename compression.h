@@ -7,6 +7,9 @@
 #include <string>
 #include <vector>
 
+
+using namespace std;
+
 // Structure to store character frequencies
 struct CharFrequency {
     char ch;
@@ -16,7 +19,7 @@ struct CharFrequency {
 // Structure to store Huffman codes
 struct CharCode {
     char ch;
-    std::string code;
+    string code;
 };
 
 // Huffman Tree Node
@@ -25,31 +28,31 @@ struct HuffmanNode {
     int freq;
     HuffmanNode* left;
     HuffmanNode* right;
-    HuffmanNode(char c, int f);
+    HuffmanNode(char c, int f) : ch(c), freq(f), left(nullptr), right(nullptr) {}
 };
 
 // Reads the content of a file
-std::string readFile(const std::string& filename);
+string readFile(const string& filename);
 
 // Writes decompressed data to a file
-void writeFile(const std::string& filename, const std::string& data);
+void writeFile(const string& filename, const string& data);
 
 // Builds the Huffman Tree
-HuffmanNode* buildHuffmanTree(const std::vector<CharFrequency>& frequencies);
+HuffmanNode* buildHuffmanTree(const vector<CharFrequency>& frequencies);
 
 // Generates Huffman codes from the tree
-void generateCodes(HuffmanNode* root, const std::string& str, std::vector<CharCode>& codes);
+void generateCodes(HuffmanNode* root, const string& str, vector<CharCode>& codes);
 
 // Encodes input data using Huffman codes
-std::vector<bool> encode(const std::string& input, const std::vector<CharCode>& codes);
+vector<bool> encode(const string& input, const vector<CharCode>& codes);
 
 // Decodes binary data using the Huffman tree
-std::string decode(const std::vector<bool>& input, HuffmanNode* root);
+string decode(const vector<bool>& input, HuffmanNode* root);
 
 // Compresses the input file
-void compress(const std::string& inputFile, const std::string& compressedFile);
+void compress(const string& inputFile, const string& compressedFile);
 
 // Decompresses the compressed file
-void decompress(const std::string& compressedFile, const std::string& decompressedFile);
+void decompress(const string& compressedFile, const string& decompressedFile);
 
 #endif // HUFFMAN_H
