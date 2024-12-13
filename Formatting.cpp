@@ -1,6 +1,11 @@
-#include "Formatting.h"
+#include <iostream>
+#include <string>
+#include <sstream>
+#include <stack>
+#include <fstream>
+#include <cctype>
 
-using namespace std;  // Add this to use standard library types and functions without std::
+using namespace std;
 
 // Function to Format XML content
 string FormattingFunction(const string& input) {
@@ -20,7 +25,7 @@ string FormattingFunction(const string& input) {
                 if (!output.empty() && output.back() != '\n') {
                     output += '\n';
                 }
-                output += string(indentationLevel * 2, ' ') + currentTag + '\n';
+                output += string(indentationLevel * 4, ' ') + currentTag + '\n';
                 currentTag.clear();
             }
             insideTag = true;

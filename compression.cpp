@@ -1,66 +1,125 @@
-#include "Huffman.h"
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <queue>
+#include <string>
+#include <vector>
 
-// HuffmanNode constructor
-HuffmanNode::HuffmanNode(char c, int f) : ch(c), freq(f), left(nullptr), right(nullptr) {}
+using namespace std;
 
-// Reads the content of a file
-std::string readFile(const std::string& filename) {
-    std::ifstream file(filename);
-    if (!file.is_open()) {
-        std::cerr << "Error: Could not open file " << filename << std::endl;
+// Structure to store character frequencies
+struct CharFrequency
+{
+    char ch;
+    int freq;
+};
+
+// Structure to store Huffman codes
+struct CharCode
+{
+    char ch;
+    string code;
+};
+
+// Huffman Tree Node
+struct HuffmanNode
+{
+    char ch;
+    int freq;
+    HuffmanNode *left;
+    HuffmanNode *right;
+    HuffmanNode(char c, int f) : ch(c), freq(f), left(nullptr), right(nullptr) {}
+};
+
+string readFile(const string &filename)
+{
+    ifstream file(filename);
+    if (!file.is_open())
+    {
+        cerr << "Error: Could not open file " << filename << endl;
         return "";
     }
-    std::stringstream buffer;
+
+    stringstream buffer;
     buffer << file.rdbuf();
     return buffer.str();
 }
 
-// Writes decompressed data to a file
-void writeFile(const std::string& filename, const std::string& data) {
-    std::ofstream file(filename);
-    if (!file.is_open()) {
-        std::cerr << "Error: Could not write to file " << filename << std::endl;
+// Function to write the decompressed data to a file
+void writeFile(const string &filename, const string &data)
+{
+    ofstream file(filename);
+    if (!file.is_open())
+    {
+        cerr << "Error: Could not write to file " << filename << endl;
         return;
     }
     file << data;
 }
 
-// Builds the Huffman Tree
-HuffmanNode* buildHuffmanTree(const std::vector<CharFrequency>& frequencies) {
-    auto compare = [](HuffmanNode* lhs, HuffmanNode* rhs) { return lhs->freq > rhs->freq; };
-    std::priority_queue<HuffmanNode*, std::vector<HuffmanNode*>, decltype(compare)> minHeap(compare);
+// Comparison object for priority queue
+struct Compare
+{
+    bool operator()(HuffmanNode *lhs, HuffmanNode *rhs)
+    {
+        return lhs->freq > rhs->freq;
+    }
+};
 
-    for (const auto& cf : frequencies) {
-        minHeap.push(new HuffmanNode(cf.ch, cf.freq));
+// Build the Huffman Tree
+HuffmanNode *buildHuffmanTree(const vector<CharFrequency> &frequencies)
+{
+    priority_queue<HuffmanNode *, vector<HuffmanNode *>, Compare> huff;
+
+    for (const auto &cf : frequencies)
+    {
+        huff.push(new HuffmanNode(cf.ch, cf.freq));
     }
 
-    while (minHeap.size() > 1) {
-        HuffmanNode* left = minHeap.top(); minHeap.pop();
-        HuffmanNode* right = minHeap.top(); minHeap.pop();
-        HuffmanNode* newNode = new HuffmanNode('\0', left->freq + right->freq);
+    while (huff.size() > 1)
+    {
+        HuffmanNode *left = huff.top();
+        huff.pop();
+        HuffmanNode *right = huff.top();
+        huff.pop();
+        HuffmanNode *newNode = new HuffmanNode('\0', left->freq + right->freq);
         newNode->left = left;
         newNode->right = right;
-        minHeap.push(newNode);
+        huff.push(newNode);
     }
 
-    return minHeap.top();
+    return huff.top();
 }
 
-// Generates Huffman codes from the tree
-void generateCodes(HuffmanNode* root, const std::string& str, std::vector<CharCode>& codes) {
-    if (!root) return;
-    if (root->ch != '\0') codes.push_back({root->ch, str});
+// Generate Huffman codes from the Huffman tree
+void generateCodes(HuffmanNode *root, const string &str, vector<CharCode> &codes)
+{
+    if (!root)
+        return;
+
+    if (root->ch != '\0')
+    {
+        codes.push_back({root->ch, str});
+    }
+
     generateCodes(root->left, str + "0", codes);
     generateCodes(root->right, str + "1", codes);
 }
 
-// Encodes input data using Huffman codes
-std::vector<bool> encode(const std::string& input, const std::vector<CharCode>& codes) {
-    std::vector<bool> result;
-    for (char ch : input) {
-        for (const auto& code : codes) {
-            if (code.ch == ch) {
-                for (char bit : code.code) result.push_back(bit == '1');
+// Encode input data using Huffman codes
+vector<bool> encode(const string &input, const vector<CharCode> &codes)
+{
+    vector<bool> result;
+    for (char ch : input)
+    {
+        for (const auto &code : codes)
+        {
+            if (code.ch == ch)
+            {
+                for (char bit : code.code)
+                {
+                    result.push_back(bit == '1');
+                }
                 break;
             }
         }
@@ -68,13 +127,17 @@ std::vector<bool> encode(const std::string& input, const std::vector<CharCode>& 
     return result;
 }
 
-// Decodes binary data using the Huffman tree
-std::string decode(const std::vector<bool>& input, HuffmanNode* root) {
-    std::string result;
-    HuffmanNode* current = root;
-    for (bool bit : input) {
+// Decode binary data using Huffman codes
+string decode(const vector<bool> &input, HuffmanNode *root)
+{
+    string result;
+    HuffmanNode *current = root;
+
+    for (bool bit : input)
+    {
         current = bit ? current->right : current->left;
-        if (current->ch != '\0') {
+        if (current->ch != '\0')
+        {
             result += current->ch;
             current = root;
         }
@@ -82,69 +145,110 @@ std::string decode(const std::vector<bool>& input, HuffmanNode* root) {
     return result;
 }
 
-// Compresses the input file
-void compress(const std::string& inputFile, const std::string& compressedFile) {
-    std::string inputData = readFile(inputFile);
-    if (inputData.empty()) return;
-    
-    std::vector<CharFrequency> frequencies;
-    for (char ch : inputData) {
-        auto it = std::find_if(frequencies.begin(), frequencies.end(), [&](const CharFrequency& cf) { return cf.ch == ch; });
-        if (it != frequencies.end()) it->freq++;
-        else frequencies.push_back({ch, 1});
+// Function to compress the input file
+void compress(const string &inputFile, const string &compressedFile)
+{
+    string inputData = readFile(inputFile);
+    if (inputData.empty())
+        return;
+
+    vector<CharFrequency> frequencies;
+    for (char ch : inputData)
+    {
+        bool found = false;
+        for (auto &cf : frequencies)
+        {
+            if (cf.ch == ch)
+            {
+                cf.freq++;
+                found = true;
+                break;
+            }
+        }
+        if (!found)
+        {
+            frequencies.push_back({ch, 1});
+        }
     }
 
-    HuffmanNode* root = buildHuffmanTree(frequencies);
-    std::vector<CharCode> huffmanCodes;
+    HuffmanNode *root = buildHuffmanTree(frequencies);
+
+    vector<CharCode> huffmanCodes;
     generateCodes(root, "", huffmanCodes);
 
-    std::vector<bool> compressedData = encode(inputData, huffmanCodes);
+    vector<bool> compressedData = encode(inputData, huffmanCodes);
 
-    std::ofstream file(compressedFile, std::ios::binary);
-    if (!file.is_open()) {
-        std::cerr << "Error: Could not write to file " << compressedFile << std::endl;
+    ofstream file(compressedFile, ios::binary);
+    if (!file.is_open())
+    {
+        cerr << "Error: Could not write to file " << compressedFile << endl;
         return;
     }
 
     size_t numSymbols = frequencies.size();
-    file.write(reinterpret_cast<const char*>(&numSymbols), sizeof(numSymbols));
-    for (const auto& cf : frequencies) {
+    file.write(reinterpret_cast<const char *>(&numSymbols), sizeof(numSymbols));
+    for (const auto &cf : frequencies)
+    {
         file.put(cf.ch);
-        file.write(reinterpret_cast<const char*>(&cf.freq), sizeof(cf.freq));
+        file.write(reinterpret_cast<const char *>(&cf.freq), sizeof(cf.freq));
     }
 
     unsigned char byte = 0;
     int bitCount = 0;
-    for (bool bit : compressedData) {
+    for (bool bit : compressedData)
+    {
         byte = (byte << 1) | bit;
-        if (++bitCount == 8) { file.put(byte); byte = 0; bitCount = 0; }
+        ++bitCount;
+        if (bitCount == 8)
+        {
+            file.put(byte);
+            byte = 0;
+            bitCount = 0;
+        }
     }
-    if (bitCount > 0) file.put(byte << (8 - bitCount));
+
+    if (bitCount > 0)
+    {
+        byte <<= (8 - bitCount);
+        file.put(byte);
+    }
+
+    cout << "Compression complete. Compressed data saved to: " << compressedFile << endl;
 }
 
-// Decompresses the compressed file
-void decompress(const std::string& compressedFile, const std::string& decompressedFile) {
-    std::ifstream file(compressedFile, std::ios::binary);
-    if (!file.is_open()) {
-        std::cerr << "Error: Could not open file " << compressedFile << std::endl;
+// Function to decompress the compressed file
+void decompress(const string &compressedFile, const string &decompressedFile)
+{
+    ifstream file(compressedFile, ios::binary);
+    if (!file.is_open())
+    {
+        cerr << "Error: Could not open file " << compressedFile << endl;
         return;
     }
 
     size_t numSymbols;
-    file.read(reinterpret_cast<char*>(&numSymbols), sizeof(numSymbols));
-    std::vector<CharFrequency> frequencies(numSymbols);
-    for (size_t i = 0; i < numSymbols; ++i) {
+    file.read(reinterpret_cast<char *>(&numSymbols), sizeof(numSymbols));
+
+    vector<CharFrequency> frequencies(numSymbols);
+    for (size_t i = 0; i < numSymbols; ++i)
+    {
         file.get(frequencies[i].ch);
-        file.read(reinterpret_cast<char*>(&frequencies[i].freq), sizeof(frequencies[i].freq));
+        file.read(reinterpret_cast<char *>(&frequencies[i].freq), sizeof(frequencies[i].freq));
     }
 
-    std::vector<bool> decompressedData;
+    vector<bool> decompressedData;
     char byte;
-    while (file.get(byte)) {
-        for (int i = 7; i >= 0; --i) decompressedData.push_back((byte >> i) & 1);
+    while (file.get(byte))
+    {
+        for (int i = 7; i >= 0; --i)
+        {
+            decompressedData.push_back((byte >> i) & 1);
+        }
     }
 
-    HuffmanNode* root = buildHuffmanTree(frequencies);
-    std::string decompressedText = decode(decompressedData, root);
+    HuffmanNode *root = buildHuffmanTree(frequencies);
+    string decompressedText = decode(decompressedData, root);
     writeFile(decompressedFile, decompressedText);
+
+    cout << "Decompression complete. Decompressed data saved to: " << decompressedFile << endl;
 }
