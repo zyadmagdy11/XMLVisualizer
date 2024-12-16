@@ -1,134 +1,84 @@
-
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <sstream>
 #include <vector>
 #include <string>
-#include <algorithm>
+#include <stack>
 
 using namespace std;
 
-bool checkXMLConsistency(string xml);
-vector<int> findMismatchedTags(string xml);
-string correctMismatchedTags(string xml, vector<int> tag_index);
-string readXMLFile(string fileName);
+bool        checkXMLConsistency    (string xml);
+vector<int> findMismatchedTags     (string xml);
+string      correctMismatchedTags  (string xml, vector<int> tag_index);
+string      readXMLFile            (string fileName);
 
-template <class t>
-class Stack
+void heapSort  (vector<int>& arr , int n);
+void buildHeap (vector<int>& arr, int n);
+void heapify   (vector<int>& arr, int n , int i);
+
+void heapify(vector<int>& arr, int n , int i)
 {
-    struct Node
+    int l = 2*i + 1;
+    int r = 2*i + 2;
+    int max = i;
+    if (l<n && arr[l] > arr[max])  max = l;
+    if (r<n && arr[r] > arr[max])  max = r;
+    if (max != i)
     {
-        t data;
-        Node *next;
-
-        Node(t val)
-        {
-            data = val;
-            next = nullptr;
-        }
-    };
-
-private:
-    Node *top;
-    int length = 0;
-
-public:
-    Stack()
-    {
-        top = nullptr;
-    }
-
-    ~Stack()
-    {
-        while (!isEmpty())
-            pop();
-    }
-
-    bool isEmpty()
-    {
-        return top == nullptr;
-    }
-    int len()
-    {
-        return length;
-    }
-    void push(t value)
-    {
-        Node *newNode = new Node(value);
-        newNode->next = top;
-        top = newNode;
-        length++;
-    }
-
-    t pop()
-    {
-        if (!isEmpty())
-        {
-            Node *temp = top;
-            t poppedValue = temp->data;
-            top = top->next;
-            delete temp;
-            length--;
-            return poppedValue;
-        }
-    }
-
-    t peak()
-    {
-        if (!isEmpty())
-        {
-            return top->data;
-        }
-    }
-
-    void display()
-    {
-        if (isEmpty())
-        {
-            return;
-        }
-        Node *temp = top;
-        while (temp != nullptr)
-        {
-            temp = temp->next;
-        }
-    }
-};
-
-bool checkXMLConsistency(string xml)
+        swap(arr[i] , arr[max]);
+        heapify(arr,n,max);
+    } 
+}
+void buildHeap (vector<int>& arr, int n)
 {
-    Stack<string> tagStack;
+    for (int i = n/2 -1 ; i>=0 ; i--) heapify(arr,n,i);
+}
+void heapSort(vector<int>& arr , int n)
+{
+    buildHeap(arr,n);
+    for (int i = n-1; i>=0 ; i--)
+    {
+        swap(arr[0],arr[i]);
+        heapify(arr,i,0);
+    }
+}
+
+
+
+bool checkXMLConsistency(string xml)               
+{
+    stack<string> tagStack;  
     int i = 0;
 
-    while (i < xml.length())
+    while (i < xml.length()) 
     {
-        if (xml[i] == '<')
+        if (xml[i] == '<') 
         {
             int closePos = xml.find('>', i);
 
-            string tagContent = xml.substr(i + 1, closePos - i - 1); // Extract tag content between '<' and '>'
+            string tagContent = xml.substr(i + 1, closePos - i - 1);            // Extract tag content between '<' and '>'
 
-            if (tagContent[0] == '/')
+            if (tagContent[0] == '/') 
             {
-                string tagName = tagContent.substr(1); // Remove '/' from the tag
+                string tagName = tagContent.substr(1);                         // Remove '/' from the tag
 
-                if (tagStack.isEmpty() || tagStack.peak() != tagName)
+                if (tagStack.empty() || tagStack.top() != tagName) 
                 {
                     return false;
                 }
-                tagStack.pop();
-            }
-            else
-                tagStack.push(tagContent);
-
+                tagStack.pop();  
+            } 
+            else    tagStack.push(tagContent);
+            
             i = closePos + 1;
-        }
-        else
-            i++;
+
+        } 
+        else    i++;
+        
     }
 
-    return tagStack.isEmpty();
+    return tagStack.empty();
 }
 
 vector<int> findMismatchedTags(string xml)
@@ -184,8 +134,7 @@ vector<int> findMismatchedTags(string xml)
         }
     }
     mismatchedPositions.insert(mismatchedPositions.end(), positionStack.begin(), positionStack.end());
-    sort(mismatchedPositions.begin(), mismatchedPositions.end());
-
+    heapSort(mismatchedPositions, mismatchedPositions.size());
     return mismatchedPositions;
 }
 
