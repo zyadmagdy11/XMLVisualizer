@@ -2,6 +2,7 @@
 #include <fstream>
 #include <vector>
 #include <string>
+#include <algorithm>
 
 using namespace std;
 
@@ -212,10 +213,12 @@ public:
         }
     }
 
+    // Mostafa Task
     User most_influencer()
     {
         int maxFollowers = -1;
         User mostInfluentialUser;
+
         // Traverse each user and count the followers
         for (int i = 0; i < numVer; i++)
         {
@@ -226,12 +229,132 @@ public:
                 mostInfluentialUser = vertices[i];
             }
         }
+
         return mostInfluentialUser;
     }
+    // Ashraf Task
+    User most_active()
+    {
+        int maxActivity = -1;
+        User mostActiveUser;
 
+        for (int i = 0; i < numVer; i++)
+        {
+            int activityScore = 0;
+
+            for (int j = 0; j < numVer; j++)
+            {
+                if (edges[i][j] != 0)
+                {
+                    activityScore++;
+                }
+            }
+
+            if (activityScore > maxActivity)
+            {
+                maxActivity = activityScore;
+                mostActiveUser = vertices[i];
+            }
+        }
+
+        return mostActiveUser;
+    }
+    // Nasser Task
+    // BigO(n^2*k1*k2*numVer)
+    // k1     number of Followers in temp1
+    // k2     number of Followers in temp2
+    // numVer number of vertices
+    vector<User> findMutualFollowers(vector<string> users_id)
+    {
+        if (users_id.size() < 2)
+            return vector<User>();
+
+        vector<User> tempMutualFollowers;
+        clearMarks();
+
+        for (int i = 0; i < users_id.size(); ++i)
+        {
+            int index1 = indexOf(users_id[i]);
+            if (index1 == -1)
+                continue;
+
+            User temp1 = vertices[index1];
+
+            for (int j = 0; j < users_id.size(); ++j)
+            {
+                int index2 = indexOf(users_id[j]);
+                if (index2 == -1 || users_id[i] == users_id[j])
+                    continue;
+
+                User temp2 = vertices[index2];
+
+                for (string follower1 : temp1.Followers_id)
+                {
+                    for (string follower2 : temp2.Followers_id)
+                    {
+                        if (follower1 == follower2)
+                        {
+                            int mutualIndex = indexOf(follower1);
+                            if (mutualIndex != -1 && !marks[mutualIndex])
+                            {
+                                marks[mutualIndex] = true;
+                                tempMutualFollowers.push_back(vertices[mutualIndex]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return tempMutualFollowers;
+    }
+
+    // Alfonse Task
+    vector<User> suggestFollowers(string user_id)
+    {
+        vector<User> suggestedUsers;
+        clearMarks();
+
+        int userIndex = indexOf(user_id);
+        if (userIndex == -1)
+            return suggestedUsers;
+
+        User user = vertices[userIndex];
+
+        for (string followerId1 : user.Followers_id)
+        {
+            int followerIndex = indexOf(followerId1);
+
+            if (followerIndex != -1)
+            {
+                User followerUser = vertices[followerIndex];
+
+                for (string followerId2 : followerUser.Followers_id)
+                {
+                    int suggestedUserIndex = indexOf(followerId2);
+
+                    if (suggestedUserIndex != -1)
+                    {
+                        User suggestedUser = vertices[suggestedUserIndex];
+
+                        if (suggestedUser.id != user.id &&
+                            !marks[suggestedUserIndex] &&
+                            find(user.Followers_id.begin(), user.Followers_id.end(), suggestedUser.id) == user.Followers_id.end())
+                        {
+                            suggestedUsers.push_back(suggestedUser);
+                            marks[suggestedUserIndex] = true;
+                        }
+                    }
+                }
+            }
+        }
+        return suggestedUsers;
+    }
+
+    // Mostafa Task
     vector<string> searchPosts(string searchTerm)
     {
         vector<string> matchedPosts;
+
         for (int i = 0; i < numVer; i++)
         {
             for (string post : vertices[i].posts)
@@ -242,6 +365,7 @@ public:
                 }
             }
         }
+
         return matchedPosts;
     }
 
@@ -256,6 +380,7 @@ public:
             {
                 cout << post << "\n";
             }
+
             cout << "\nFollowers: ";
             for (int j = 0; j < numVer; j++)
             {
@@ -267,61 +392,43 @@ public:
             cout << "\n======================================\n";
         }
     }
-};
-User most_active()
-{
-    int maxActivity = -1;
-    User mostActiveUser;
-
-    for (int i = 0; i < numVer; i++)
+    // Ashraf Task
+    string sanitizeString(const string &input)
     {
-        int activityScore = 0;
-
-        for (int j = 0; j < numVer; j++)
+        string sanitized = input;
+        sanitized.erase(remove(sanitized.begin(), sanitized.end(), '\n'), sanitized.end());
+        return sanitized;
+    }
+    void exportToDot(const string &filename)
+    {
+        ofstream outFile(filename);
+        if (!outFile)
         {
-            if (edges[i][j] != 0)
+            cout << "Error opening file for writing." << endl;
+            return;
+        }
+
+        outFile << "digraph SocialNetwork {";
+
+        // Output nodes (users)
+        for (int i = 0; i < numVer; i++)
+        {
+            outFile << "  \"" << sanitizeString(vertices[i].name) << "\" [label=\"" << sanitizeString(vertices[i].name) << "\"];";
+        }
+
+        // Output edges (followers relationships)
+        for (int i = 0; i < numVer; i++)
+        {
+            for (int j = 0; j < numVer; j++)
             {
-                activityScore++;
+                if (edges[i][j] != 0)
+                {
+                    outFile << "  \"" << sanitizeString(vertices[i].name) << "\" -> \"" << sanitizeString(vertices[j].name) << "\";";
+                }
             }
         }
 
-        if (activityScore > maxActivity)
-        {
-            maxActivity = activityScore;
-            mostActiveUser = vertices[i];
-        }
+        outFile << "}";
+        outFile.close();
     }
-
-    return mostActiveUser;
-}
-
-int main()
-{
-    Graph Network(30);
-    Network.parseXML("Network.xml");
-    Network.display();
-    return 0;
-
-    User mostInfluential = Network.most_influencer();
-    cout << "Most Influential User: " << mostInfluential.name << "  ID: " << mostInfluential.id << endl;
-
-    cout << "=====================================\n"
-         << endl;
-
-
-
-
-
-
-
-    string searchTerm = "Charlie";
-    vector<string> posts = Network.searchPosts(searchTerm);
-
-    cout << "Posts containing '" << searchTerm << "':" << endl;
-    for (const string &post : posts)
-    {
-        cout << post << endl;
-    }
-
-    return 0;
-}
+};
