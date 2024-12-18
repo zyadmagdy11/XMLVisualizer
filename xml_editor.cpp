@@ -3,14 +3,30 @@
 #include "XML_Consistency.cpp"
 #include "xml2json.cpp"
 #include "compression.cpp"
+#include "Graph.cpp"
+#include <sstream>
 
 using namespace std;
+
+vector<string> splitString(const string &input, char delimiter)
+{
+    vector<string> tokens;
+    stringstream ss(input);
+    string token;
+
+    while (getline(ss, token, delimiter))
+    {
+        tokens.push_back(token);
+    }
+
+    return tokens;
+}
 
 int main(int argc, char *argv[])
 {
     if (argc < 4)
     {
-        cerr << "Usage: xml_editor <command> -i <input_file> [-o <output_file>] [-f]\n";
+        cerr << "Usage: xml_editor <command> -i <input_file> [-o <output_file>] [options]\n";
         return 1;
     }
 
@@ -18,6 +34,7 @@ int main(int argc, char *argv[])
     string inputFile, outputFile;
     bool fixErrors = false;
 
+    // Parse input arguments
     for (int i = 2; i < argc; ++i)
     {
         if (string(argv[i]) == "-i" && i + 1 < argc)
@@ -36,10 +53,110 @@ int main(int argc, char *argv[])
 
     if (inputFile.empty())
     {
-        cerr << "Error: Input file not specified.\n";
+        cerr << "Error: Input file not specified. Use -i <input_file>.\n";
         return 1;
     }
 
+    // Graph-related commands
+    if (command == "most_active" || command == "most_influencer" || command == "mutual" || command == "suggest" || command == "search")
+    {
+        Graph network(200);
+        network.parseXML(inputFile);
+
+        if (command == "most_active")
+        {
+            User mostActiveUser = network.most_active();
+            cout << "Most Active User: " << mostActiveUser.name << " (ID: " << mostActiveUser.id << ")\n";
+        }
+        else if (command == "most_influencer")
+        {
+            User mostInfluencer = network.most_influencer();
+            cout << "Most Influential User: " << mostInfluencer.name << " (ID: " << mostInfluencer.id << ")\n";
+        }
+        else if (command == "mutual")
+        {
+            vector<string> userIds;
+
+            for (int i = 2; i < argc; i++)
+            {
+                if (string(argv[i]) == "-ids" && i + 1 < argc)
+                {
+                    userIds = splitString(argv[++i], ',');
+                }
+            }
+
+            vector<User> mutualFollowers = network.findMutualFollowers(userIds);
+
+            cout << "Mutual Followers:\n";
+            for (const User &user : mutualFollowers)
+            {
+                cout << user.name << " (ID: " << user.id << ")\n";
+            }
+        }
+        else if (command == "suggest")
+        {
+            string userId;
+
+            for (int i = 2; i < argc; i++)
+            {
+                if (string(argv[i]) == "-id" && i + 1 < argc)
+                {
+                    userId = argv[++i];
+                }
+            }
+
+            vector<User> suggestedUsers = network.suggestFollowers(userId);
+
+            cout << "Suggested Users:\n";
+            for (const User &user : suggestedUsers)
+            {
+                cout << user.name << " (ID: " << user.id << ")\n";
+            }
+        }
+        else if (command == "search")
+        {
+            string searchTerm;
+            string searchType;
+
+            for (int i = 2; i < argc; i++)
+            {
+                if (string(argv[i]) == "-w" && i + 1 < argc)
+                {
+                    searchType = "word";
+                    searchTerm = argv[++i];
+                }
+                else if (string(argv[i]) == "-t")
+                {
+                    searchType = "topic";
+                    searchTerm.clear();
+                    for (int j = i + 1; j < argc && string(argv[j])[0] != '-'; j++, i++)
+                    {
+                        if (!searchTerm.empty())
+                            searchTerm += " ";
+                        searchTerm += argv[j];
+                    }
+                }
+            }
+
+            if (searchTerm.empty())
+            {
+                cerr << "Search term not specified. Use -w <word> or -t <topic>.\n";
+                return 1;
+            }
+
+            vector<string> matchedPosts = network.searchPosts(searchTerm);
+
+            cout << "Posts mentioning the " << searchType << " \"" << searchTerm << "\":\n";
+            for (const string &post : matchedPosts)
+            {
+                cout << post << "\n";
+            }
+        }
+
+        return 0;
+    }
+
+    // Existing XML-related commands
     if (command == "verify")
     {
         string xml = readXMLFile(inputFile);
