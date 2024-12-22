@@ -1,6 +1,6 @@
 import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
-from tkinter import filedialog, messagebox
+from tkinter import filedialog, messagebox, simpledialog
 import tkinter as tk
 import subprocess
 import os
@@ -52,7 +52,9 @@ class XMLGUI:
         operations_frame.pack(fill=X)
 
         button_width = 20
-        buttons = [
+
+        # XML operations
+        xml_operations = [
             ("Verify XML", self.verify_xml, SUCCESS),
             ("Fix Errors and Save", self.fix_errors, WARNING),
             ("Format XML", self.format_xml, PRIMARY),
@@ -60,11 +62,30 @@ class XMLGUI:
             ("Minify XML", self.minify_xml, DARK),
             ("Compress Data", self.compress_data, SECONDARY),
             ("Decompress Data", self.decompress_data, LIGHT),
-            ("Save Output", self.save_output, SUCCESS),
         ]
 
-        for col, (text, command, style) in enumerate(buttons):
-            button = ttk.Button(operations_frame, text=text, width=button_width, bootstyle=style, command=command)
+        # Graph operations
+        graph_operations = [
+            ("Draw Graph", lambda: self.run_xml_editor_command("draw"), INFO),
+            ("Most Active", lambda: self.run_xml_editor_command("most_active"), SUCCESS),
+            ("Most Influencer", lambda: self.run_xml_editor_command("most_influencer"), PRIMARY),
+            ("Mutual Followers", self.run_mutual_followers, DARK),
+            ("Suggest Followers", self.run_suggest_followers, WARNING),
+            ("Search Posts", self.run_search_posts, SECONDARY),
+        ]
+
+        # Add XML operation buttons
+        xml_frame = ttk.LabelFrame(operations_frame, text="XML Operations", padding=10, bootstyle=INFO)
+        xml_frame.pack(fill=X, pady=5)
+        for col, (text, command, style) in enumerate(xml_operations):
+            button = ttk.Button(xml_frame, text=text, width=button_width, bootstyle=style, command=command)
+            button.grid(row=0, column=col, padx=5, pady=5)
+
+        # Add Graph operation buttons
+        graph_frame = ttk.LabelFrame(operations_frame, text="Graph Operations", padding=10, bootstyle=SUCCESS)
+        graph_frame.pack(fill=X, pady=5)
+        for col, (text, command, style) in enumerate(graph_operations):
+            button = ttk.Button(graph_frame, text=text, width=button_width, bootstyle=style, command=command)
             button.grid(row=0, column=col, padx=5, pady=5)
 
         self.output_content = ""
@@ -115,7 +136,6 @@ class XMLGUI:
 
     def convert_to_json(self):
         self.run_xml_editor_command("json", output_extension=".json")
-        # Load and display the converted JSON content
         try:
             with open(self.output_file, "r") as f:
                 content = f.read()
@@ -149,7 +169,6 @@ class XMLGUI:
             process = subprocess.run(args, capture_output=True, text=True)
             self.display_output(process.stdout, process.stderr)
 
-            # Display the decompressed file content in the "File Content" tab
             if os.path.exists(output_file):
                 try:
                     with open(output_file, "r") as file:
@@ -160,20 +179,22 @@ class XMLGUI:
         except Exception as e:
             messagebox.showerror("Error", f"Failed to execute decompression: {e}")
 
-    def save_output(self):
-        if not self.output_content:
-            messagebox.showerror("Error", "No output to save!")
-            return
+    def run_mutual_followers(self):
+        user_ids = simpledialog.askstring("Input", "Enter user IDs (comma-separated):")
+        if user_ids:
+            self.run_xml_editor_command("mutual", extra_args=["-ids", user_ids])
 
-        output_file = filedialog.asksaveasfilename(defaultextension=".txt",
-                                                   filetypes=[("Text files", "*.txt")])
-        if output_file:
-            try:
-                with open(output_file, "w") as file:
-                    file.write(self.output_content)
-                messagebox.showinfo("Success", f"Output saved to {output_file}")
-            except Exception as e:
-                messagebox.showerror("Error", f"Failed to save output: {e}")
+    def run_suggest_followers(self):
+        user_id = simpledialog.askstring("Input", "Enter user ID:")
+        if user_id:
+            self.run_xml_editor_command("suggest", extra_args=["-id", user_id])
+
+    def run_search_posts(self):
+        search_type = simpledialog.askstring("Input", "Enter search type ('word' or 'topic'):")
+        search_term = simpledialog.askstring("Input", f"Enter search {search_type}:")
+        if search_type and search_term:
+            extra_args = [f"-{search_type[0]}", search_term]
+            self.run_xml_editor_command("search", extra_args=extra_args)
 
     def run_xml_editor_command(self, command, extra_args=None, output_extension=".xml"):
         input_file = self.input_file_path.get()
@@ -181,13 +202,20 @@ class XMLGUI:
             messagebox.showerror("Error", "Input file does not exist!")
             return
 
+        # Determine if the command requires an output file
+        commands_requiring_output = ["draw", "compress", "decompress", "format", "json", "mini"]
         output_file = None
-        if command != "verify":
+
+        # If the command is "draw", set the default extension to .jpg
+        if command == "draw":
+            output_extension = ".jpg"
+
+        if command in commands_requiring_output or (command == "verify" and extra_args and "-f" in extra_args):
             output_file = filedialog.asksaveasfilename(
                 defaultextension=output_extension,
                 filetypes=[(f"{output_extension.upper()} files", f"*{output_extension}")]
             )
-            if not output_file:
+            if not output_file:  
                 return
 
         if not os.path.exists(self.xml_editor_path):
@@ -204,8 +232,10 @@ class XMLGUI:
             process = subprocess.run(args, capture_output=True, text=True)
             self.display_output(process.stdout, process.stderr)
 
-            # Display the output file content in the "File Content" tab
-            if output_file and os.path.exists(output_file):
+            # For "draw", skip displaying the file content as it is an image
+            if command == "draw":
+                messagebox.showinfo("Info", f"Graph saved as: {output_file}")
+            elif output_file and os.path.exists(output_file):
                 try:
                     with open(output_file, "r") as file:
                         content = file.read()
@@ -216,7 +246,13 @@ class XMLGUI:
             messagebox.showerror("Error", f"Failed to execute {command}: {e}")
 
 
+
 if __name__ == "__main__":
     root = ttk.Window(themename="superhero")
     app = XMLGUI(root)    
     root.mainloop()
+
+
+
+
+# ////////////// Mission Done  ///////////////////////
