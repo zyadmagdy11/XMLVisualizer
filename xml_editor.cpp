@@ -58,12 +58,27 @@ int main(int argc, char *argv[])
     }
 
     // Graph-related commands
-    if (command == "most_active" || command == "most_influencer" || command == "mutual" || command == "suggest" || command == "search")
+    if (command == "draw" || command == "most_active" || command == "most_influencer" || command == "mutual" || command == "suggest" || command == "search")
     {
         Graph network(200);
         network.parseXML(inputFile);
+        network.exportToDot("social_network.dot");
 
-        if (command == "most_active")
+        if (command == "draw")
+        {
+            string pythonCommand = "python Graph_GUI.py";
+            if (!outputFile.empty())
+            {
+                pythonCommand += " -o " + outputFile;
+            }
+            int result = system(pythonCommand.c_str());
+            if (result != 0)
+            {
+                cerr << "Failed to render graph with Python script.\n";
+                return 1;
+            }
+        }
+        else if (command == "most_active")
         {
             User mostActiveUser = network.most_active();
             cout << "Most Active User: " << mostActiveUser.name << " (ID: " << mostActiveUser.id << ")\n";
