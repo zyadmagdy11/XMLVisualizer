@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
             string pythonCommand = "python Graph_GUI.py";
             if (!outputFile.empty())
             {
-                pythonCommand += " -o " + outputFile;
+                pythonCommand += " -o \"" + outputFile + "\"";
             }
             int result = system(pythonCommand.c_str());
             if (result != 0)
@@ -78,6 +78,7 @@ int main(int argc, char *argv[])
                 return 1;
             }
         }
+
         else if (command == "most_active")
         {
             User mostActiveUser = network.most_active();
